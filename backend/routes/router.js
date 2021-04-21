@@ -118,7 +118,7 @@ const getTokenInfo = async (token) => {
   return res.Item
 }
 
-app.put('/v1/user', async function(req, res) {
+app.put('/user', async function(req, res) {
   try {
     const { accessToken } = req.body
     const now = new Date().getTime()
@@ -139,70 +139,9 @@ app.put('/v1/user', async function(req, res) {
     res.json({error: err, url: req.url, body: req.body});
   }
 });
-/************************************
- * HTTP post method for insert object *
- *************************************/
 
-app.post('/v1/qrCode', async function(req, res) {
+app.post('/qrCode', async function(req, res) {
   try {
-    const { qrCode } = req.body
-    const userId = qrCode
-    const visitedAt = new Date().getTime()
-    const user = await getUser(userId)
-    const data = await putVisit( {
-      userId: user.id,
-      visitedAt: visitedAt,
-      displayName: user.displayName,
-      pictureUrl: user.pictureUrl,
-    });
-    res.json({success: 'succeed!', url: req.url, data: data});
-  } catch (err) {
-    console.error(err)
-    res.statusCode = 500;
-    res.json({error: err, url: req.url, body: req.body});
-  }
-});
-
-app.get('/v1/visit', async function(req, res) {
-  try {
-    const data = await getVisitList();
-    res.json({success: 'succeed!', url: req.url, data: data});
-  } catch (err) {
-    console.error(err)
-    res.statusCode = 500;
-    res.json({error: err, url: req.url, body: req.body});
-  }
-});
-
-app.post('/v2/token', async function(req, res) {
-  try {
-    const { accessToken } = req.body
-    const now = new Date().getTime()
-    // LINEのアクセストークンが正しいか検証
-    await verifyToken(accessToken)
-    // アクセストークンを利用してプロフィール取得
-    const profile = await getProfile(accessToken)
-    const userId = profile.userId
-
-    // ランダムな文字列を生成
-    const token  = Crypto.randomBytes(16).toString("hex")
-    await putToken({
-      token,
-      userId,
-      expiredAt: now + 20 * 1000, // 20秒だけ有効
-      updatedAt: now,
-    })
-    res.json({success: 'succeed!', url: req.url, data: { token }})
-  } catch (err) {
-    console.error(err)
-    res.statusCode = 500;
-    res.json({error: err, url: req.url, body: req.body});
-  }
-});
-
-app.post('/v2/qrCode', async function(req, res) {
-  try {
-    console.log('/v2/qrCode')
     const { qrCode } = req.body
     const token = qrCode
     const visitedAt = new Date().getTime()
@@ -229,4 +168,42 @@ app.post('/v2/qrCode', async function(req, res) {
     res.json({error: err, url: req.url, body: req.body});
   }
 });
+
+app.get('/visit', async function(req, res) {
+  try {
+    const data = await getVisitList();
+    res.json({success: 'succeed!', url: req.url, data: data});
+  } catch (err) {
+    console.error(err)
+    res.statusCode = 500;
+    res.json({error: err, url: req.url, body: req.body});
+  }
+});
+
+app.post('/token', async function(req, res) {
+  try {
+    const { accessToken } = req.body
+    const now = new Date().getTime()
+    // LINEのアクセストークンが正しいか検証
+    await verifyToken(accessToken)
+    // アクセストークンを利用してプロフィール取得
+    const profile = await getProfile(accessToken)
+    const userId = profile.userId
+
+    // ランダムな文字列を生成
+    const token  = Crypto.randomBytes(16).toString("hex")
+    await putToken({
+      token,
+      userId,
+      expiredAt: now + 20 * 1000, // 20秒だけ有効
+      updatedAt: now,
+    })
+    res.json({success: 'succeed!', url: req.url, data: { token }})
+  } catch (err) {
+    console.error(err)
+    res.statusCode = 500;
+    res.json({error: err, url: req.url, body: req.body});
+  }
+});
+
 module.exports = app
